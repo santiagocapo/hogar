@@ -70,6 +70,10 @@ h1,h2{line-height:1.15}
 .top-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);max-width:40rem;margin:0 auto}
 .top h1{margin:0;font-size:2rem;font-weight:800;letter-spacing:-.02em}
 .top p{margin:0;color:var(--muted);font-size:.9375rem}
+.acciones{display:flex;align-items:center;gap:var(--s1);flex:none}
+.icono{width:var(--tap);height:var(--tap);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  flex:none;color:var(--ink);background:var(--surface);box-shadow:inset 0 0 0 .09375rem var(--line);text-decoration:none}
+.icono svg{width:1.375rem;height:1.375rem}
 .avatar{width:var(--tap);height:var(--tap);border-radius:50%;border:0;background:var(--green);
   color:var(--on-green);font-weight:750;font-size:1.0625rem;flex:none}
 .filters{display:flex;gap:var(--s1);max-width:40rem;margin:var(--s1) auto 0}
@@ -262,7 +266,11 @@ details[open] > .week-head .chev{transform:rotate(90deg)}
   <header class="top">
     <div class="top-row">
       <div><h1>La compra</h1><p id="subtitle"></p></div>
-      <button class="avatar" id="btn-user" aria-label="Cuenta"></button>
+      <div class="acciones">
+        <a class="icono" id="ir-calendario" hidden aria-label="Abrir el calendario" title="Calendario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></a>
+        <a class="icono" id="ir-recetas" hidden aria-label="Abrir las recetas" title="Recetas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3v7a2.5 2.5 0 0 0 5 0V3M8.5 10v11M17.5 3c-1.4 1.6-2 3.4-2 5.5 0 1.6.7 2.6 2 3V21"/></svg></a>
+        <button class="avatar" id="btn-user" aria-label="Cuenta"></button>
+      </div>
     </div>
     <div class="filters">
       <div class="searchwrap">
@@ -403,6 +411,10 @@ async function boot(){
     const cfg = await import("./config.js");
     firebaseConfig = cfg.firebaseConfig;
     USUARIOS = Object.fromEntries(Object.entries(cfg.USUARIOS || {}).map(([k, v]) => [k.toLowerCase(), v]));
+    // Botones para saltar a las otras apps (las direcciones están en config.js).
+    const ENLACES = cfg.APPS || {};
+    for (const [sel, app] of [["#ir-calendario", "calendario"], ["#ir-recetas", "recetas"]])
+      if (ENLACES[app]) { $(sel).href = ENLACES[app]; $(sel).hidden = false; }
   } catch { return show("#v-config"); }
   if (!firebaseConfig?.apiKey || firebaseConfig.apiKey.startsWith("PEGA")) return show("#v-config");
   const [{initializeApp}, A, F] = await Promise.all([
