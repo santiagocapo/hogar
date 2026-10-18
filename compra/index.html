@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La compra</title>
+<meta name="theme-color" content="#2F7D4F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="La compra">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================
+   Criterios aplicados: medidas en rem (soporta zoom al 200 %),
+   áreas pulsables de 44x44 px mínimo, filas de 56 px,
+   espaciado en múltiplos de 8 px, interlineado 1,6 en texto
+   descriptivo, animaciones solo con transform y opacity.
+   =========================================================== */
+:root{
+  --bg:#EEF3EC; --surface:#FFFFFF; --ink:#18241D; --muted:#55655B; --line:#DCE5DD;
+  --green:#2F7D4F; --on-green:#FFFFFF; --lemon:#F2C230; --lemon-soft:#FFF4CC; --danger:#A5201A;
+  --font:"Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --s1:.5rem; --s2:1rem; --s3:1.5rem; --s4:2rem;   /* 8 / 16 / 24 / 32 px */
+  --tap:2.75rem;                                    /* 44 px: ley de Fitts */
+  --row:3.5rem;                                     /* 56 px de alto de fila */
+  --tabs-h:4rem;
+  --r:.875rem;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#121A15; --surface:#1B241E; --ink:#E6EEE8; --muted:#A3B3A9; --line:#2C3A31;
+    --green:#5CB47E; --on-green:#0E1511; --lemon-soft:#3A3217; --danger:#F2857D;}
+}
+*{box-sizing:border-box}
+html{font-size:100%}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+  -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent}
+body{min-height:100dvh;line-height:1.6}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:.1875rem solid var(--ink);outline-offset:.125rem}
+[hidden]{display:none!important}
+h1,h2{line-height:1.15}
+
+/* ---------- Pantallas de acceso y configuración ---------- */
+.screen{min-height:100dvh;display:flex;flex-direction:column;justify-content:center;
+  padding:calc(env(safe-area-inset-top) + var(--s4)) var(--s3) calc(env(safe-area-inset-bottom) + var(--s4));
+  max-width:30rem;margin:0 auto}
+.screen h1{font-size:2.5rem;letter-spacing:-.02em;font-weight:800;margin:0 0 var(--s1);color:var(--green)}
+.screen p{color:var(--muted);margin:0 0 var(--s3)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:var(--tap);
+  border:0;border-radius:var(--r);padding:var(--s1) var(--s2);font-weight:650;font-size:1.0625rem}
+.btn.primary{background:var(--green);color:var(--on-green)}
+.btn.ghost{background:transparent;box-shadow:inset 0 0 0 .09375rem var(--line)}
+.screen details{margin-top:var(--s2)}
+.screen summary{color:var(--muted);min-height:var(--tap);display:flex;align-items:center}
+.screen form{display:grid;gap:var(--s1);margin-top:var(--s1)}
+.err{color:var(--danger);min-height:1.6em;margin-top:var(--s2)!important}
+
+/* ---------- Cabecera y filtros (zona superior fija) ---------- */
+.top{position:sticky;top:0;z-index:5;padding:calc(env(safe-area-inset-top) + var(--s2)) var(--s2) var(--s1);
+  background:color-mix(in srgb,var(--bg) 90%,transparent);
+  backdrop-filter:blur(.875rem);-webkit-backdrop-filter:blur(.875rem)}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);max-width:40rem;margin:0 auto}
+.top h1{margin:0;font-size:2rem;font-weight:800;letter-spacing:-.02em}
+.top p{margin:0;color:var(--muted);font-size:.9375rem}
+.avatar{width:var(--tap);height:var(--tap);border-radius:50%;border:0;background:var(--green);
+  color:var(--on-green);font-weight:750;font-size:1.0625rem;flex:none}
+.filters{display:flex;gap:var(--s1);max-width:40rem;margin:var(--s1) auto 0}
+.searchwrap{position:relative;flex:1 1 auto;min-width:0}
+.searchwrap input{width:100%;min-height:var(--tap);padding:0 var(--tap) 0 var(--s2);border-radius:var(--r);
+  border:0;box-shadow:inset 0 0 0 .09375rem var(--line);background:var(--surface);font-size:1rem;
+  -webkit-appearance:none;appearance:none}
+.searchwrap input::-webkit-search-cancel-button{display:none}
+#search-clear{position:absolute;right:0;top:0;width:var(--tap);height:var(--tap);border:0;background:none;
+  color:var(--muted);font-size:1.375rem;line-height:1;border-radius:50%}
+#filter-cat{flex:0 0 auto;max-width:9rem;min-height:var(--tap);padding:0 var(--s1) 0 var(--s2);
+  border:0;box-shadow:inset 0 0 0 .09375rem var(--line);border-radius:var(--r);background:var(--surface);font-size:1rem}
+.offline{max-width:40rem;margin:var(--s1) auto 0;padding:var(--s1) var(--s2);border-radius:var(--r);
+  background:var(--lemon-soft);font-size:.875rem}
+
+main{padding:var(--s1) var(--s2) calc(var(--tabs-h) + env(safe-area-inset-bottom) + var(--s4) + var(--s4));
+  max-width:40rem;margin:0 auto}
+
+/* ---------- Bloques de categoría ---------- */
+.cat-block{margin:var(--s3) 0 0;content-visibility:auto;contain-intrinsic-size:auto 12rem}
+.tag{display:flex;align-items:center;gap:var(--s1);min-height:var(--tap);padding:0 var(--s2) 0 var(--s1);
+  border-radius:.5rem 1.25rem 1.25rem .5rem;background:color-mix(in srgb,var(--c) 18%,var(--surface));
+  border-left:.3125rem solid var(--c);font-weight:700;font-size:.9375rem;margin:0 0 var(--s1);
+  width:fit-content;max-width:100%;list-style:none}
+summary.tag::-webkit-details-marker{display:none}
+.tag .n{font-weight:500;color:var(--muted);margin-left:auto;padding-left:var(--s1)}
+.tag .chev{flex:none;transition:transform .14s;color:var(--muted)}
+details[open] > .tag .chev{transform:rotate(90deg)}
+
+/* ---------- Filas ---------- */
+ul{list-style:none;margin:0;padding:0;background:var(--surface);border-radius:var(--r);overflow:hidden}
+li{display:flex;align-items:center;gap:var(--s1);padding:var(--s1);min-height:var(--row);
+  transition:opacity .16s}
+.body{flex:1 1 auto;min-width:0;background:none;border:0;text-align:left;
+  padding:var(--s1) 0;min-height:var(--row);display:flex;flex-direction:column;justify-content:center;border-radius:.5rem}
+.name{position:relative;display:inline-block;max-width:100%;font-size:1.0625rem;font-weight:560;line-height:1.3}
+.name::after{content:"";position:absolute;left:0;right:0;top:.6em;height:.125rem;background:currentColor;
+  transform:scaleX(0);transform-origin:left;transition:transform .16s}
+li.done{opacity:.55}
+li.done .name::after{transform:scaleX(1)}
+.qty{margin-left:.5rem;font-weight:700;color:var(--green)}
+.meta{display:block;font-size:.875rem;color:var(--muted);line-height:1.6;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who{font-size:.8125rem;color:var(--muted);flex:none}
+.emo{flex:none;width:var(--s3);text-align:center}
+
+.check{width:var(--tap);height:var(--tap);border:0;background:none;flex:none;
+  display:grid;place-items:center;padding:0;position:relative;border-radius:50%}
+.check i{width:1.75rem;height:1.75rem;border-radius:50%;box-shadow:inset 0 0 0 .125rem var(--green);grid-area:1/1}
+.check i::after{content:"";display:block;width:100%;height:100%;border-radius:50%;background:var(--green);
+  transform:scale(0);transition:transform .14s}
+li.done .check i::after{transform:scale(1)}
+.check svg{grid-area:1/1;place-self:center;width:1rem;height:1rem;opacity:0;transition:opacity .14s;
+  color:var(--on-green);z-index:1}
+li.done .check svg{opacity:1}
+
+.add{width:var(--tap);height:var(--tap);border:0;background:none;flex:none;
+  display:grid;place-items:center;padding:0;border-radius:50%;color:var(--green)}
+.add i{width:2.25rem;height:2.25rem;border-radius:50%;background:var(--green);color:var(--on-green);
+  display:grid;place-items:center;font-size:1.5rem;line-height:1;font-style:normal}
+.del{width:var(--tap);height:var(--tap);border:0;background:none;color:var(--muted);
+  font-size:1.375rem;line-height:1;flex:none;padding:0;border-radius:50%}
+.pill{font-size:.8125rem;color:var(--green);box-shadow:inset 0 0 0 .09375rem currentColor;
+  border-radius:99px;padding:.125rem .5rem;flex:none}
+.due{font-size:.75rem;font-weight:700;color:var(--ink);background:var(--lemon);border-radius:99px;
+  padding:.125rem .5rem;flex:none}
+
+/* ---------- Avisos y bloques informativos ---------- */
+.banner{display:flex;align-items:center;gap:var(--s2);margin:var(--s1) 0 0;padding:var(--s1) var(--s2);
+  min-height:var(--tap);border-radius:var(--r);background:var(--lemon-soft);border:0;width:100%;text-align:left}
+.banner b{display:block}
+.banner span{font-size:.875rem;color:var(--muted)}
+.banner .go{margin-left:auto;font-weight:700;color:var(--green);flex:none}
+.sug{margin-top:var(--s2)}
+.sug-head{display:flex;align-items:center;justify-content:space-between;gap:var(--s1);margin:0 0 var(--s1)}
+.sug-head h2{margin:0;font-size:1.375rem;font-weight:800;letter-spacing:-.01em}
+.sug-head button{border:0;background:none;color:var(--green);font-weight:700;min-height:var(--tap);
+  padding:0 var(--s1);border-radius:.5rem}
+.sug ul{box-shadow:inset 0 0 0 .125rem var(--lemon)}
+.hint{margin:var(--s2) 0 0;font-size:.875rem;color:var(--muted)}
+.hint button{border:0;background:none;color:var(--green);font-weight:700;min-height:var(--tap);padding:0 var(--s1)}
+.empty{text-align:center;color:var(--muted);padding:var(--s4) var(--s3)}
+.empty b{display:block;color:var(--ink);font-size:1.25rem;margin-bottom:var(--s1)}
+
+/* ---------- Botón añadir y pestañas ---------- */
+#fab{position:fixed;right:var(--s2);bottom:calc(var(--tabs-h) + env(safe-area-inset-bottom) + var(--s2));
+  z-index:6;width:3.5rem;height:3.5rem;border-radius:1.25rem;border:0;
+  background:var(--green);color:var(--on-green);font-size:2rem;line-height:1;
+  box-shadow:0 .5rem 1.25rem -.375rem color-mix(in srgb,var(--green) 70%,transparent)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--surface);
+  box-shadow:0 -.0625rem 0 var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{flex:1;min-width:0;min-height:var(--tabs-h);border:0;background:none;font-weight:600;
+  font-size:clamp(.75rem,3.6vw,1rem);color:var(--muted);line-height:1.2;text-align:center;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.25rem;padding:0 .25rem}
+.tabs button[aria-selected="true"]{color:var(--ink);box-shadow:inset 0 .1875rem 0 var(--green)}
+.badge{background:var(--lemon);color:#18241D;border-radius:99px;font-size:.75rem;font-weight:800;padding:0 .5rem}
+
+/* ---------- Hoja inferior ---------- */
+#sheet-bg{position:fixed;inset:0;z-index:20;background:rgba(10,20,14,.45);opacity:0;
+  pointer-events:none;transition:opacity .16s}
+#sheet-bg.open{opacity:1;pointer-events:auto}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-width:40rem;margin:0 auto;max-height:92dvh;
+  overflow:auto;background:var(--surface);border-radius:1.25rem 1.25rem 0 0;
+  padding:var(--s1) var(--s2) calc(env(safe-area-inset-bottom) + var(--s2));
+  transform:translateY(105%);transition:transform .18s ease-out;visibility:hidden}
+#sheet.open{transform:none;visibility:visible}
+.grip{width:2.5rem;height:.25rem;border-radius:.1875rem;background:var(--line);margin:0 auto var(--s1)}
+#sheet h2{margin:0 0 var(--s2);font-size:1.5rem;font-weight:800}
+.f{display:block;margin-bottom:var(--s2);font-size:.875rem;color:var(--muted);font-weight:600}
+.f input,.f select{display:block;width:100%;margin-top:var(--s1);min-height:var(--tap);padding:0 var(--s2);
+  border-radius:.75rem;border:0;box-shadow:inset 0 0 0 .09375rem var(--line);background:var(--bg);
+  font-size:1.0625rem;color:var(--ink);font-weight:450}
+.row2{display:grid;grid-template-columns:1fr 1.6fr;gap:var(--s1)}
+.matches{display:flex;flex-wrap:wrap;gap:var(--s1);margin:0 0 var(--s2)}
+.matches button{box-shadow:inset 0 0 0 .09375rem var(--green);border:0;background:none;color:var(--green);
+  border-radius:99px;min-height:var(--tap);padding:0 var(--s2);font-size:.875rem;font-weight:600}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+  min-height:var(--tap);padding:var(--s1) 0;font-weight:600}
+.switch input{appearance:none;width:3.25rem;height:var(--tap);background:none;
+  position:relative;margin:0;flex:none;border-radius:99px}
+.switch input::before{content:"";position:absolute;left:0;right:0;top:.375rem;bottom:.375rem;
+  border-radius:99px;background:var(--line)}
+.switch input::after{content:"";position:absolute;top:.5625rem;left:.1875rem;width:1.625rem;height:1.625rem;
+  border-radius:50%;background:#fff;transition:transform .14s;box-shadow:0 .0625rem .1875rem rgba(0,0,0,.25)}
+.switch input:checked::before{background:var(--green)}
+.switch input:checked::after{transform:translateX(1.25rem)}
+fieldset{border:0;padding:0;margin:0 0 var(--s2);min-width:0}
+legend{font-size:.875rem;color:var(--muted);font-weight:600;margin-bottom:var(--s1);line-height:1.6}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s1)}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;width:100%;height:100%;margin:0}
+.seg span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:var(--tap);
+  padding:0 .25rem;border-radius:.625rem;box-shadow:inset 0 0 0 .09375rem var(--line);font-size:.875rem;font-weight:600}
+.seg input:checked + span{background:var(--green);color:var(--on-green);box-shadow:none}
+.seg input:focus-visible + span{outline:.1875rem solid var(--ink);outline-offset:.125rem}
+.actions{display:grid;grid-template-columns:1fr 1.6fr;gap:var(--s1);margin-top:var(--s1)}
+.danger{display:flex;gap:var(--s1);margin-top:var(--s2)}
+.danger button{flex:1;border:0;background:none;color:var(--danger);font-weight:600;
+  min-height:var(--tap);border-radius:.5rem}
+.hist-note{margin:0 0 var(--s2);padding:var(--s1) var(--s2);border-radius:.75rem;background:var(--bg);
+  font-size:.875rem;line-height:1.6;color:var(--muted)}
+.hist-note b{color:var(--ink);font-weight:650}
+
+#toast{position:fixed;left:var(--s2);right:var(--s2);
+  bottom:calc(var(--tabs-h) + env(safe-area-inset-bottom) + var(--s4) + var(--s3));
+  z-index:30;max-width:32rem;margin:0 auto;display:flex;align-items:center;gap:var(--s2);
+  padding:var(--s1) var(--s2);border-radius:var(--r);background:var(--ink);color:var(--bg);font-size:.9375rem}
+#toast button{margin-left:auto;border:0;background:none;color:var(--lemon);font-weight:750;
+  min-height:var(--tap);padding:0 var(--s1);border-radius:.5rem}
+#toast button:focus-visible{outline-color:var(--lemon)}
+
+/* ---------- Histórico ---------- */
+.week{margin:var(--s3) 0 0;content-visibility:auto;contain-intrinsic-size:auto 12rem}
+.week-head{display:flex;align-items:center;gap:var(--s1);min-height:var(--tap);margin-bottom:var(--s1);
+  list-style:none;font-weight:800;font-size:1.25rem;letter-spacing:-.01em}
+.week-head::-webkit-details-marker{display:none}
+.week-head .n{font-size:.875rem;font-weight:500;color:var(--muted);margin-left:auto;white-space:nowrap}
+.week-head .chev{color:var(--muted);transition:transform .14s;flex:none}
+details[open] > .week-head .chev{transform:rotate(90deg)}
+.more{display:flex;align-items:center;justify-content:center;margin:var(--s3) auto 0;border:0;
+  box-shadow:inset 0 0 0 .09375rem var(--line);background:var(--surface);border-radius:.75rem;
+  min-height:var(--tap);padding:0 var(--s3);font-weight:600}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<section id="v-config" class="screen" hidden>
+  <h1>Falta un paso</h1>
+  <p>No se encuentra el archivo <strong>config.js</strong> o le faltan datos. Súbelo al repositorio junto a index.html con la configuración de Firebase y los dos correos.</p>
+</section>
+
+<section id="v-login" class="screen" hidden>
+  <h1>La compra</h1>
+  <p>Entrad con vuestra cuenta para ver y editar la lista compartida.</p>
+  <button class="btn primary" id="btn-google">Entrar con Google</button>
+  <details>
+    <summary>Entrar con correo y contraseña</summary>
+    <form id="f-login">
+      <label class="f">Correo<input type="email" id="l-email" autocomplete="username" required></label>
+      <label class="f">Contraseña<input type="password" id="l-pass" autocomplete="current-password" required></label>
+      <button class="btn ghost" type="submit">Entrar</button>
+    </form>
+  </details>
+  <p class="err" id="login-err" role="alert"></p>
+</section>
+
+<section id="v-main" hidden>
+  <header class="top">
+    <div class="top-row">
+      <div><h1>La compra</h1><p id="subtitle"></p></div>
+      <button class="avatar" id="btn-user" aria-label="Cuenta"></button>
+    </div>
+    <div class="filters">
+      <div class="searchwrap">
+        <input id="search" type="search" placeholder="Buscar producto" aria-label="Buscar producto" autocomplete="off" enterkeyhint="search">
+        <button id="search-clear" aria-label="Borrar la búsqueda" hidden>×</button>
+      </div>
+      <select id="filter-cat" aria-label="Filtrar por categoría"></select>
+    </div>
+    <div class="offline" id="offline" hidden>Sin conexión. Los cambios se guardan en el móvil y se sincronizan al volver.</div>
+  </header>
+
+  <main>
+    <div id="tab-lista" role="tabpanel" aria-labelledby="t-lista" tabindex="0"></div>
+    <div id="tab-hab" role="tabpanel" aria-labelledby="t-hab" tabindex="0" hidden></div>
+    <div id="tab-hist" role="tabpanel" aria-labelledby="t-hist" tabindex="0" hidden></div>
+  </main>
+
+  <button id="fab" aria-label="Añadir producto">+</button>
+  <nav class="tabs" role="tablist" aria-label="Secciones">
+    <button role="tab" id="t-lista" data-tab="lista" aria-controls="tab-lista" aria-selected="true">Lista</button>
+    <button role="tab" id="t-hab" data-tab="hab" aria-controls="tab-hab" aria-selected="false" tabindex="-1">Habituales <span class="badge" id="badge" hidden></span></button>
+    <button role="tab" id="t-hist" data-tab="hist" aria-controls="tab-hist" aria-selected="false" tabindex="-1">Histórico</button>
+  </nav>
+</section>
+
+<div id="sheet-bg"></div>
+<form id="sheet" autocomplete="off" role="dialog" aria-modal="true" aria-labelledby="sh-title">
+  <div class="grip"></div>
+  <h2 id="sh-title">Añadir producto</h2>
+  <label class="f">Producto<input id="f-name" required maxlength="60" enterkeyhint="done"></label>
+  <div class="matches" id="f-matches"></div>
+  <label class="f">Categoría<select id="f-cat"></select></label>
+  <div class="row2">
+    <label class="f">Cantidad<input id="f-qty" maxlength="20" placeholder="2, 1 kg"></label>
+    <label class="f">Nota<input id="f-note" maxlength="80" placeholder="Marca, tamaño"></label>
+  </div>
+  <p class="hist-note" id="f-hist" hidden></p>
+  <label class="switch"><span>Producto habitual</span><input type="checkbox" id="f-rec"></label>
+  <fieldset id="f-freq">
+    <legend>¿Cada cuánto suele hacer falta? A partir de la tercera compra, la app usa vuestro ritmo real.</legend>
+    <div class="seg">
+      <label><input type="radio" name="freq" value="semanal"><span>Semanal</span></label>
+      <label><input type="radio" name="freq" value="quincenal"><span>Quincenal</span></label>
+      <label><input type="radio" name="freq" value="mensual"><span>Mensual</span></label>
+      <label><input type="radio" name="freq" value="" checked><span>No sé</span></label>
+    </div>
+  </fieldset>
+  <div class="actions">
+    <button type="button" class="btn ghost" id="sh-cancel">Cancelar</button>
+    <button type="submit" class="btn primary" id="sh-save">Añadir a la lista</button>
+  </div>
+  <div class="danger" id="sh-danger">
+    <button type="button" id="sh-remove">Quitar de la lista</button>
+    <button type="button" id="sh-delete">Borrar producto</button>
+  </div>
+</form>
+
+<div id="toast" hidden role="status"><span id="toast-msg"></span><button id="toast-undo">Deshacer</button></div>
+
+<script type="module">
+/* La configuración (Firebase y correos) está en config.js,
+   así las actualizaciones de index.html no la pisan. */
+let firebaseConfig = null, USUARIOS = {};
+
+const FB = "https://www.gstatic.com/firebasejs/11.0.2/";
+const $ = s => document.querySelector(s);
+
+/* El orden de esta lista es el orden en que se muestran las categorías
+   en toda la app: lista, habituales, histórico y menús desplegables. */
+const CATS = [
+  {id:"cuidado",    n:"Cuidado personal y salud", e:"🧴", c:"#9A6FB0"},
+  {id:"lacteos",    n:"Lácteos y huevos", e:"🥚", c:"#8FA6B8"},
+  {id:"fruta",      n:"Frutas y verduras", e:"🥬", c:"#4E9A45"},
+  {id:"panaderia",  n:"Panadería, repostería y cereales", e:"🥖", c:"#C08A3E"},
+  {id:"pescaderia", n:"Pescadería", e:"🐟", c:"#3C7FB0"},
+  {id:"carniceria", n:"Carnicería", e:"🥩", c:"#C2474A"},
+  {id:"pasta",      n:"Pasta, arroz y legumbres", e:"🍝", c:"#D0A020"},
+  {id:"conservas",  n:"Conservas y latas", e:"🥫", c:"#B5562F"},
+  {id:"aceites",    n:"Aceites, salsas y condimentos", e:"🫒", c:"#7D8B2E"},
+  {id:"hogar",      n:"Artículos para el hogar", e:"🧽", c:"#3E9A93"},
+  {id:"bebidas",    n:"Vino, cerveza y licores", e:"🍷", c:"#8E3553"},
+];
+const FREQ = {semanal:{d:7,n:"Semanal"}, quincenal:{d:14,n:"Quincenal"}, mensual:{d:30,n:"Mensual"}};
+const DAY = 864e5;
+
+let auth, db, api = {}, me = null, items = [], tab = "lista", editId = null, unsub = null;
+let qText = "", qCat = "", lastFocus = null;
+const dirty = {lista:true, hab:true};
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+const ms = t => t ? (t.toMillis ? t.toMillis() : +t) : null;
+const catOf = id => CATS.find(c => c.id === id) || CATS[CATS.length - 1];
+const byName = (a, b) => a.name.localeCompare(b.name, "es", {sensitivity:"base"});
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : v; } catch { return d; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch {} }
+};
+
+function show(id){ for (const v of ["#v-config","#v-login","#v-main"]) $(v).hidden = v !== id; }
+
+function ago(t){
+  const m = ms(t); if (!m) return "sin comprar aún";
+  const d = Math.floor((Date.now() - m) / DAY);
+  return d <= 0 ? "comprado hoy" : d === 1 ? "comprado ayer" : `comprado hace ${d} días`;
+}
+/* Frecuencia aprendida: mediana de los intervalos entre las últimas compras.
+   Hacen falta 3 compras (2 intervalos). Se ignoran compras repetidas el mismo día. */
+function buysOf(i){
+  const b = (i.buys || []).map(ms).filter(Boolean);
+  if (!b.length && ms(i.lastBought)) b.push(ms(i.lastBought));
+  return b.sort((x, y) => x - y);
+}
+function learned(i){
+  const b = buysOf(i), gaps = [];
+  for (let k = 1; k < b.length; k++){ const g = (b[k] - b[k - 1]) / DAY; if (g >= 1) gaps.push(g); }
+  if (gaps.length < 2) return null;
+  gaps.sort((x, y) => x - y);
+  const m = gaps.length >> 1;
+  return Math.max(2, Math.round(gaps.length % 2 ? gaps[m] : (gaps[m - 1] + gaps[m]) / 2));
+}
+const intervalOf = i => learned(i) ?? FREQ[i.freq]?.d ?? null;
+const isDue = i => {
+  if (!i.recurring || i.onList || !ms(i.lastBought)) return false;
+  const iv = intervalOf(i); if (!iv) return false;
+  return (Date.now() - ms(i.lastBought)) / DAY >= iv - 1;
+};
+const suggestions = () => items.filter(isDue).sort(byName);
+function rhythm(i){
+  const l = learned(i);
+  if (l) return l === 7 ? "Cada semana" : l === 14 ? "Cada 2 semanas" : `Cada ${l} días`;
+  return FREQ[i.freq]?.n || "";
+}
+
+/* ---------- Arranque ---------- */
+async function boot(){
+  try {
+    const cfg = await import("./config.js");
+    firebaseConfig = cfg.firebaseConfig;
+    USUARIOS = Object.fromEntries(Object.entries(cfg.USUARIOS || {}).map(([k, v]) => [k.toLowerCase(), v]));
+  } catch { return show("#v-config"); }
+  if (!firebaseConfig?.apiKey || firebaseConfig.apiKey.startsWith("PEGA")) return show("#v-config");
+  const [{initializeApp}, A, F] = await Promise.all([
+    import(FB + "firebase-app.js"), import(FB + "firebase-auth.js"), import(FB + "firebase-firestore.js")
+  ]);
+  api = {...A, ...F};
+  const app = initializeApp(firebaseConfig);
+  auth = A.getAuth(app);
+  try {
+    db = F.initializeFirestore(app, {localCache: F.persistentLocalCache({tabManager: F.persistentSingleTabManager()})});
+  } catch { db = F.getFirestore(app); }
+
+  A.onAuthStateChanged(auth, user => {
+    if (unsub) { unsub(); unsub = null; }
+    if (!user) { me = null; return show("#v-login"); }
+    const email = (user.email || "").toLowerCase();
+    if (!USUARIOS[email]) {
+      $("#login-err").textContent = `La cuenta ${email} no tiene acceso a esta lista.`;
+      A.signOut(auth); return;
+    }
+    me = {uid: user.uid, email, name: USUARIOS[email]};
+    $("#btn-user").textContent = me.name.charAt(0).toUpperCase();
+    show("#v-main");
+    listen();
+  });
+}
+
+function listen(){
+  const {collection, onSnapshot} = api;
+  unsub = onSnapshot(collection(db, "items"), snap => {
+    items = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    render();
+  }, err => {
+    $("#tab-lista").innerHTML = `<div class="empty"><b>No se puede leer la lista</b>${esc(err.code === "permission-denied"
+      ? "Revisa que los dos correos estén bien escritos en las reglas de Firestore." : err.message)}</div>`;
+  });
+}
+
+/* ---------- Filtros ---------- */
+function matches(i){
+  if (qCat && catOf(i.category).id !== qCat) return false;
+  if (qText && !norm(i.name).includes(qText) && !norm(i.note).includes(qText)) return false;
+  return true;
+}
+const filtering = () => !!(qText || qCat);
+function hint(shown, total){
+  if (!filtering() || shown === total) return "";
+  return `<p class="hint">Mostrando ${shown} de ${total}. <button data-act="clearf">Quitar filtros</button></p>`;
+}
+
+/* ---------- Pintado ---------- */
+/* Solo se repinta la pestaña visible; las demás quedan marcadas como pendientes. */
+function render(){
+  const pending = items.filter(i => i.onList).length;
+  const sug = suggestions().length;
+  $("#subtitle").textContent = pending ? `${pending} ${pending === 1 ? "producto pendiente" : "productos pendientes"}` : "Lista vacía";
+  $("#badge").hidden = !sug; $("#badge").textContent = sug;
+  dirty.lista = dirty.hab = true;
+  paint();
+}
+function paint(){
+  if (tab === "lista" && dirty.lista){ renderList(); dirty.lista = false; }
+  else if (tab === "hab" && dirty.hab){ renderHab(); dirty.hab = false; }
+  else if (tab === "hist") renderHist();
+}
+
+const CHEV = `<svg class="chev" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const CHECK = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function catTag(cat, count, collapsible){
+  const inner = `<span aria-hidden="true">${cat.e}</span>${esc(cat.n)}<span class="n">${count}</span>${collapsible ? CHEV : ""}`;
+  return collapsible
+    ? `<summary class="tag" style="--c:${cat.c}">${inner}</summary>`
+    : `<h2 class="tag" style="--c:${cat.c}">${inner}</h2>`;
+}
+
+function renderList(){
+  const all = items.filter(i => i.onList);
+  const pending = all.filter(matches);
+  const sug = suggestions();
+  let html = "";
+  if (sug.length && !filtering()){
+    const names = sug.slice(0, 2).map(i => i.name).join(", ") + (sug.length > 2 ? ` y ${sug.length - 2} más` : "");
+    html += `<button class="banner" data-go="hab"><span><b>Quizá os falte</b><span>${esc(names)}</span></span><span class="go">Ver</span></button>`;
+  }
+  if (!pending.length){
+    html += all.length
+      ? `<div class="empty"><b>Sin resultados</b>Ningún producto pendiente coincide con la búsqueda.</div>${hint(0, all.length)}`
+      : `<div class="empty"><b>No hay nada pendiente</b>Pulsa + para añadir un producto o repasa vuestros habituales.</div>`;
+  } else {
+    for (const cat of CATS){
+      const list = pending.filter(i => catOf(i.category).id === cat.id).sort(byName);
+      if (!list.length) continue;
+      html += `<section class="cat-block">${catTag(cat, list.length, false)}<ul>` + list.map(i => `
+        <li data-id="${i.id}">
+          <button class="check" data-act="buy" aria-label="Marcar ${esc(i.name)} como comprado"><i></i>${CHECK}</button>
+          <button class="body" data-act="edit">
+            <span><span class="name">${esc(i.name)}</span>${i.qty ? `<span class="qty">${esc(i.qty)}</span>` : ""}</span>
+            ${i.note ? `<span class="meta">${esc(i.note)}</span>` : ""}
+          </button>
+          ${i.addedByName ? `<span class="who">${esc(i.addedByName)}</span>` : ""}
+        </li>`).join("") + `</ul></section>`;
+    }
+    html += hint(pending.length, all.length);
+  }
+  $("#tab-lista").innerHTML = html;
+}
+
+function habRow(i){
+  const r = rhythm(i); const f = r ? r + ", " : "";
+  return `<li data-id="${i.id}">
+    <button class="body" data-act="edit"><span class="name">${esc(i.name)}</span>
+      <span class="meta">${esc(f + ago(i.lastBought))}</span></button>
+    ${isDue(i) && !i.onList ? `<span class="due">Toca reponer</span>` : ""}
+    ${i.onList ? `<span class="pill">En la lista</span>`
+      : `<button class="add" data-act="add" aria-label="Añadir ${esc(i.name)} a la lista"><i aria-hidden="true">+</i></button>`}
+  </li>`;
+}
+
+function renderHab(){
+  const all = items.filter(i => i.recurring);
+  const hab = all.filter(matches);
+  const sug = suggestions();
+  const closed = new Set(store.get("cerradas", "").split(",").filter(Boolean));
+  let html = "";
+  if (!all.length){
+    html = `<div class="empty"><b>Aún no tenéis habituales</b>Al añadir un producto, activa «Producto habitual» y aparecerá aquí para añadirlo con un toque cada semana.</div>`;
+  } else {
+    if (sug.length && !filtering()){
+      html += `<section class="sug"><div class="sug-head"><h2>Quizá os falte…</h2><button data-act="addall">Añadir todos</button></div><ul>${sug.map(habRow).join("")}</ul></section>`;
+    }
+    for (const cat of CATS){
+      const list = hab.filter(i => catOf(i.category).id === cat.id).sort(byName);
+      if (!list.length) continue;
+      const open = filtering() || !closed.has(cat.id);
+      html += `<details class="cat-block" data-cat="${cat.id}"${open ? " open" : ""}>${catTag(cat, list.length, true)}<ul>${list.map(habRow).join("")}</ul></details>`;
+    }
+    if (!hab.length) html += `<div class="empty"><b>Sin resultados</b>Ningún habitual coincide con la búsqueda.</div>`;
+    html += hint(hab.length, all.length);
+  }
+  $("#tab-hab").innerHTML = html;
+}
+
+/* ---------- Acciones sobre los datos ---------- */
+const col = () => api.collection(db, "items");
+const ref = id => api.doc(db, "items", id);
+const stamp = () => ({addedBy: me.uid, addedByName: me.name, addedAt: api.serverTimestamp()});
+
+const fail = err => { console.error(err); toast("No se pudo guardar el cambio. Revisa la conexión."); };
+const run = p => p.catch(fail);
+
+function buy(item, li){
+  li.classList.add("done");
+  setTimeout(() => {
+    const {id, ...data} = item;
+    const now = Date.now();
+    const logRef = api.doc(api.collection(db, "compras"));
+    const b = api.writeBatch(db);
+    b.set(logRef, {itemId: id, name: item.name, category: item.category || "", qty: item.qty || "",
+      recurring: !!item.recurring, boughtAt: api.Timestamp.fromMillis(now), boughtBy: me.uid, boughtByName: me.name});
+    if (item.recurring){
+      b.update(ref(id), {onList: false, lastBought: api.Timestamp.fromMillis(now), buys: [...buysOf(item), now].slice(-8)});
+    } else b.delete(ref(id));
+    run(b.commit());
+    toast(`${item.name} comprado`, () => {
+      const u = api.writeBatch(db);
+      u.delete(logRef);
+      if (item.recurring) u.update(ref(id), {onList: true, lastBought: item.lastBought ?? null, buys: item.buys ?? null});
+      else u.set(ref(id), data);
+      run(u.commit());
+      if (tab === "hist") loadHistory(true);
+    });
+  }, 300);
+}
+function addToList(item){
+  run(api.updateDoc(ref(item.id), {onList: true, ...stamp()}));
+  toast(`${item.name} añadido a la lista`);
+}
+
+/* ---------- Hoja de añadir / editar ---------- */
+function freqValue(){ return document.querySelector('input[name="freq"]:checked')?.value || ""; }
+function syncFreq(){ $("#f-freq").hidden = !$("#f-rec").checked; }
+
+function openSheet(item){
+  editId = item?.id || null;
+  lastFocus = document.activeElement;
+  const catalogo = !item && tab === "hab";
+  $("#sheet").dataset.mode = item ? "edit" : (catalogo ? "catalogo" : "add");
+  $("#sh-title").textContent = item ? "Editar producto" : (catalogo ? "Nuevo habitual" : "Añadir producto");
+  $("#sh-save").textContent = item ? "Guardar cambios" : (catalogo ? "Guardar habitual" : "Añadir a la lista");
+  $("#f-name").value = item?.name || "";
+  $("#f-cat").value = item ? catOf(item.category).id : ($("#f-cat").dataset.last || CATS[0].id);
+  $("#f-qty").value = item?.qty || "";
+  $("#f-note").value = item?.note || "";
+  $("#f-rec").checked = item ? !!item.recurring : catalogo;
+  document.querySelector(`input[name="freq"][value="${item?.freq || ""}"]`).checked = true;
+  syncFreq();
+  $("#f-matches").innerHTML = "";
+  const note = item?.recurring ? histNote(item) : "";
+  $("#f-hist").hidden = !note; $("#f-hist").innerHTML = note;
+  $("#sh-danger").hidden = !item;
+  $("#sh-remove").hidden = !item?.onList;
+  $("#v-main").inert = true;
+  $("#sheet-bg").classList.add("open"); $("#sheet").classList.add("open");
+  setTimeout(() => (item ? $("#sh-save") : $("#f-name")).focus(), 180);
+}
+function histNote(i){
+  const b = buysOf(i).slice(-4).reverse();
+  if (!b.length) return "Aún no se ha comprado. Con tres compras, la app calculará cada cuánto os hace falta.";
+  const fechas = b.map(t => new Date(t).toLocaleDateString("es-ES", {day: "numeric", month: "short"})).join(", ");
+  const l = learned(i);
+  return `<b>Últimas compras:</b> ${esc(fechas)}.<br>` + (l
+    ? `Según vuestras compras, os hace falta <b>cada ${l} días</b> y así se calculan las sugerencias.`
+    : "Con tres compras, la app calculará cada cuánto os hace falta.");
+}
+function closeSheet(){
+  $("#sheet-bg").classList.remove("open"); $("#sheet").classList.remove("open");
+  document.activeElement?.blur();
+  $("#v-main").inert = false;
+  editId = null;
+  if (lastFocus?.isConnected) lastFocus.focus(); else $("#fab").focus();
+  lastFocus = null;
+}
+
+function showMatches(){
+  const q = norm($("#f-name").value);
+  if (editId || q.length < 2){ $("#f-matches").innerHTML = ""; return; }
+  const found = items.filter(i => norm(i.name).includes(q)).sort(byName).slice(0, 4);
+  $("#f-matches").innerHTML = found.map(i =>
+    `<button type="button" data-id="${i.id}">${i.onList ? "Ya en la lista: " : "Usar "}${esc(i.name)}</button>`).join("");
+}
+
+function save(e){
+  e.preventDefault();
+  const name = $("#f-name").value.trim().replace(/\s+/g, " ");
+  if (!name) return;
+  const mode = $("#sheet").dataset.mode;
+  const recurring = $("#f-rec").checked;
+  const fields = {
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    category: $("#f-cat").value, qty: $("#f-qty").value.trim(), note: $("#f-note").value.trim(),
+    recurring, freq: recurring ? (freqValue() || null) : null
+  };
+  $("#f-cat").dataset.last = fields.category;
+  const id = editId; closeSheet();
+
+  if (mode === "edit"){
+    const item = items.find(i => i.id === id); if (!item) return;
+    if (!recurring && !item.onList){ run(api.deleteDoc(ref(id))); return toast(`${fields.name} ya no es habitual`); }
+    return run(api.updateDoc(ref(id), fields));
+  }
+  const onList = mode !== "catalogo";
+  const existing = items.find(i => norm(i.name) === norm(name));
+  if (existing){
+    run(api.updateDoc(ref(existing.id), {...fields, onList: existing.onList || onList, ...(onList && !existing.onList ? stamp() : {})}));
+  } else {
+    run(api.addDoc(col(), {...fields, onList, lastBought: null, ...stamp()}));
+  }
+  toast(onList ? `${fields.name} añadido a la lista` : `${fields.name} guardado en habituales`);
+}
+
+/* ---------- Aviso con deshacer ---------- */
+let toastTimer, undoFn;
+function toast(msg, undo){
+  $("#toast-msg").textContent = msg; undoFn = undo;
+  $("#toast-undo").hidden = !undo; $("#toast").hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $("#toast").hidden = true, undo ? 5000 : 2200);
+}
+
+/* ---------- Histórico (se lee solo al abrir la pestaña, por tramos) ---------- */
+const PAGE = 60;
+let hist = [], histCursor = null, histEnd = false, histLoading = false;
+
+async function loadHistory(reset){
+  if (histLoading || !api.getDocs) return;
+  histLoading = true;
+  if (reset){ hist = []; histCursor = null; histEnd = false; $("#tab-hist").innerHTML = `<div class="empty">Cargando…</div>`; }
+  try {
+    const {query, collection, orderBy, limit, startAfter, getDocs} = api;
+    const parts = [collection(db, "compras"), orderBy("boughtAt", "desc")];
+    if (histCursor) parts.push(startAfter(histCursor));
+    parts.push(limit(PAGE));
+    const snap = await getDocs(query(...parts));
+    hist.push(...snap.docs.map(d => ({id: d.id, ...d.data()})));
+    if (snap.docs.length) histCursor = snap.docs[snap.docs.length - 1];
+    histEnd = snap.docs.length < PAGE;
+    renderHist();
+  } catch (err) {
+    console.error(err);
+    $("#tab-hist").innerHTML = `<div class="empty"><b>No se puede leer el histórico</b>${err.code === "permission-denied"
+      ? "Falta añadir la colección «compras» en las reglas de Firestore." : "Revisa la conexión y vuelve a abrir esta pestaña."}</div>`;
+  } finally { histLoading = false; }
+}
+
+/* Borra un registro del histórico y lo descuenta del ritmo aprendido del producto. */
+function deleteHist(h){
+  const t = ms(h.boughtAt);
+  const it = items.find(i => i.id === h.itemId);
+  const hRef = api.doc(db, "compras", h.id);
+  const b = api.writeBatch(db);
+  b.delete(hRef);
+  let prev = null;
+  if (it?.recurring && t){
+    const rest = buysOf(it).filter(x => x !== t);
+    prev = {buys: it.buys ?? null, lastBought: it.lastBought ?? null};
+    const upd = {buys: rest};
+    if (ms(it.lastBought) === t) upd.lastBought = rest.length ? api.Timestamp.fromMillis(rest[rest.length - 1]) : null;
+    b.update(ref(it.id), upd);
+  }
+  run(b.commit());
+  hist = hist.filter(x => x.id !== h.id);
+  renderHist();
+  toast(`${h.name} borrado del histórico`, () => {
+    const {id, ...data} = h;
+    const u = api.writeBatch(db);
+    u.set(hRef, data);
+    if (prev) u.update(ref(it.id), prev);
+    run(u.commit());
+    loadHistory(true);
+  });
+}
+
+function weekStart(t){
+  const d = new Date(t); d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d.getTime();
+}
+function weekLabel(start){
+  const now = weekStart(Date.now());
+  if (start === now) return "Esta semana";
+  if (start === now - 7 * DAY) return "Semana pasada";
+  const a = new Date(start), b = new Date(start + 6 * DAY);
+  const f = o => new Intl.DateTimeFormat("es-ES", o);
+  return a.getMonth() === b.getMonth()
+    ? `Del ${a.getDate()} al ${b.getDate()} de ${f({month: "long"}).format(b)}`
+    : `Del ${f({day: "numeric", month: "long"}).format(a)} al ${f({day: "numeric", month: "long"}).format(b)}`;
+}
+
+function renderHist(){
+  const shown = hist.filter(h => {
+    if (qCat && catOf(h.category).id !== qCat) return false;
+    if (qText && !norm(h.name).includes(qText)) return false;
+    return true;
+  });
+  if (!shown.length){
+    $("#tab-hist").innerHTML = hist.length
+      ? `<div class="empty"><b>Sin resultados</b>Ninguna compra cargada coincide con la búsqueda.</div>${hint(0, hist.length)}`
+      : `<div class="empty"><b>Aún no hay compras registradas</b>Cada producto que marquéis como comprado aparecerá aquí, agrupado por semanas.</div>`;
+    return;
+  }
+  const weeks = new Map();
+  for (const h of shown){
+    const w = weekStart(ms(h.boughtAt) || Date.now());
+    if (!weeks.has(w)) weeks.set(w, []);
+    weeks.get(w).push(h);
+  }
+  const day = new Intl.DateTimeFormat("es-ES", {weekday: "long", day: "numeric"});
+  let html = "", n = 0;
+  for (const [w, list] of weeks){
+    const open = n++ < 2 || filtering();   /* resumen plegado a partir de la tercera semana */
+    html += `<details class="week"${open ? " open" : ""}><summary class="week-head">${CHEV}${esc(weekLabel(w))}` +
+      `<span class="n">${list.length} ${list.length === 1 ? "producto" : "productos"}</span></summary><ul>` +
+      list.map(h => {
+        const cat = catOf(h.category);
+        return `<li data-item="${esc(h.itemId || "")}" data-hid="${esc(h.id)}">
+          <span class="emo" aria-hidden="true">${cat.e}</span>
+          <button class="body" data-act="hist">
+            <span><span class="name">${esc(h.name)}</span>${h.qty ? `<span class="qty">${esc(h.qty)}</span>` : ""}</span>
+            <span class="meta">${esc(cat.n)} · ${esc(day.format(new Date(ms(h.boughtAt) || Date.now())))}</span></button>
+          ${h.boughtByName ? `<span class="who">${esc(h.boughtByName)}</span>` : ""}
+          <button class="del" data-act="hdel" aria-label="Borrar ${esc(h.name)} del histórico">×</button>
+        </li>`;
+      }).join("") + `</ul></details>`;
+  }
+  html += hint(shown.length, hist.length);
+  if (!histEnd) html += `<button class="more" data-act="more">Ver compras anteriores</button>`;
+  $("#tab-hist").innerHTML = html;
+}
+
+/* ---------- Eventos ---------- */
+function setTab(t){
+  tab = t;
+  for (const p of ["lista","hab","hist"]) $("#tab-" + p).hidden = p !== t;
+  document.querySelectorAll('[role="tab"]').forEach(b => {
+    const on = b.dataset.tab === t;
+    b.setAttribute("aria-selected", on ? "true" : "false");
+    b.tabIndex = on ? 0 : -1;
+  });
+  $("#fab").hidden = t === "hist";
+  if (t === "hist") loadHistory(true); else paint();
+  window.scrollTo({top: 0});
+}
+
+function clearFilters(){
+  qText = ""; qCat = "";
+  $("#search").value = ""; $("#filter-cat").value = "";
+  $("#search-clear").hidden = true;
+  dirty.lista = dirty.hab = true; paint();
+}
+
+function onMainClick(e){
+  const go = e.target.closest("[data-go]"); if (go) return setTab(go.dataset.go);
+  const btn = e.target.closest("[data-act]"); if (!btn) return;
+  const act = btn.dataset.act;
+  if (act === "clearf") return clearFilters();
+  if (act === "addall"){
+    const sug = suggestions();
+    const b = api.writeBatch(db);
+    sug.forEach(i => b.update(ref(i.id), {onList: true, ...stamp()}));
+    run(b.commit()); return toast(`${sug.length} habituales añadidos a la lista`);
+  }
+  if (act === "more") return loadHistory(false);
+  if (act === "hdel"){
+    const h = hist.find(x => x.id === btn.closest("li")?.dataset.hid);
+    return h && deleteHist(h);
+  }
+  if (act === "hist"){
+    const it = items.find(i => i.id === btn.closest("li")?.dataset.item);
+    return it ? openSheet(it) : toast("Este producto ya no está en la lista ni en habituales");
+  }
+  const li = btn.closest("li"); const item = items.find(i => i.id === li?.dataset.id); if (!item) return;
+  if (act === "buy") buy(item, li);
+  if (act === "edit") openSheet(item);
+  if (act === "add") addToList(item);
+}
+
+function wire(){
+  $("#f-cat").innerHTML = CATS.map(c => `<option value="${c.id}">${c.e} ${esc(c.n)}</option>`).join("");
+  $("#filter-cat").innerHTML = `<option value="">Todas</option>` +
+    CATS.map(c => `<option value="${c.id}">${c.e} ${esc(c.n)}</option>`).join("");
+
+  $("main").addEventListener("click", onMainClick);
+  /* El evento toggle de <details> no burbujea: se captura. */
+  $("#tab-hab").addEventListener("toggle", e => {
+    const d = e.target.closest("details[data-cat]"); if (!d || filtering()) return;
+    const closed = new Set(store.get("cerradas", "").split(",").filter(Boolean));
+    d.open ? closed.delete(d.dataset.cat) : closed.add(d.dataset.cat);
+    store.set("cerradas", [...closed].join(","));
+  }, true);
+
+  document.querySelectorAll('[role="tab"]').forEach(b => {
+    b.addEventListener("click", () => setTab(b.dataset.tab));
+    b.addEventListener("keydown", e => {
+      const dir = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!dir) return;
+      e.preventDefault();
+      const all = [...document.querySelectorAll('[role="tab"]')];
+      const next = all[(all.indexOf(b) + dir + all.length) % all.length];
+      setTab(next.dataset.tab); next.focus();
+    });
+  });
+
+  let tq;
+  $("#search").addEventListener("input", e => {
+    $("#search-clear").hidden = !e.target.value;
+    clearTimeout(tq);
+    tq = setTimeout(() => { qText = norm(e.target.value); dirty.lista = dirty.hab = true; paint(); }, 120);
+  });
+  $("#search-clear").addEventListener("click", () => { clearFilters(); $("#search").focus(); });
+  $("#filter-cat").addEventListener("change", e => {
+    qCat = e.target.value; dirty.lista = dirty.hab = true; paint();
+  });
+
+  $("#fab").addEventListener("click", () => openSheet(null));
+  $("#sheet-bg").addEventListener("click", closeSheet);
+  $("#sh-cancel").addEventListener("click", closeSheet);
+  $("#sheet").addEventListener("submit", save);
+  $("#f-rec").addEventListener("change", syncFreq);
+  $("#f-name").addEventListener("input", showMatches);
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && $("#sheet").classList.contains("open")) closeSheet();
+  });
+  $("#f-matches").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    const item = items.find(i => i.id === b.dataset.id); if (!item) return;
+    if (item.onList || $("#sheet").dataset.mode === "catalogo") return openSheet(item);
+    closeSheet(); addToList(item);
+  });
+  $("#sh-remove").addEventListener("click", () => {
+    const item = items.find(i => i.id === editId); closeSheet(); if (!item) return;
+    run(item.recurring ? api.updateDoc(ref(item.id), {onList: false}) : api.deleteDoc(ref(item.id)));
+    toast(`${item.name} quitado de la lista`);
+  });
+  $("#sh-delete").addEventListener("click", () => {
+    const item = items.find(i => i.id === editId); if (!item) return;
+    if (!confirm(`¿Borrar «${item.name}» de la lista y de habituales?`)) return;
+    closeSheet(); const {id, ...data} = item;
+    run(api.deleteDoc(ref(id)));
+    toast(`${item.name} borrado`, () => run(api.setDoc(ref(id), data)));
+  });
+  $("#toast-undo").addEventListener("click", () => { undoFn?.(); $("#toast").hidden = true; });
+  $("#btn-user").addEventListener("click", () => {
+    if (me && confirm(`Has entrado como ${me.name} (${me.email}). ¿Cerrar sesión?`)) api.signOut(auth);
+  });
+  $("#btn-google").addEventListener("click", async () => {
+    $("#login-err").textContent = "";
+    try { await api.signInWithPopup(auth, new api.GoogleAuthProvider()); }
+    catch (err) { $("#login-err").textContent = "No se pudo entrar con Google. Prueba con correo y contraseña. (" + err.code + ")"; }
+  });
+  $("#f-login").addEventListener("submit", async e => {
+    e.preventDefault(); $("#login-err").textContent = "";
+    try { await api.signInWithEmailAndPassword(auth, $("#l-email").value.trim(), $("#l-pass").value); }
+    catch { $("#login-err").textContent = "Correo o contraseña incorrectos."; }
+  });
+  const net = () => $("#offline").hidden = navigator.onLine;
+  addEventListener("online", net); addEventListener("offline", net); net();
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && me) render(); });
+}
+
+wire();
+boot().catch(err => {
+  show("#v-login");
+  $("#login-err").textContent = "No se pudo cargar la app. Comprueba la conexión y vuelve a abrirla.";
+  console.error(err);
+});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
