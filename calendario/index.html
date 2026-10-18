@@ -336,6 +336,8 @@ textarea{resize:vertical}
     <div class="chips" role="group" aria-label="Qué citas mostrar"></div>
     <a class="icono" id="btn-compra" hidden aria-label="Abrir la lista de la compra" title="Lista de la compra">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.2l2.2 10.2a1.5 1.5 0 0 0 1.5 1.2h8.4a1.5 1.5 0 0 0 1.4-1.1L20.5 8H6.1"/><circle cx="9.5" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></svg></a>
+    <a class="icono" id="btn-recetas" hidden aria-label="Abrir las recetas" title="Recetas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2.5 2.5 0 0 0 5 0V3M8.5 10v11M17.5 3c-1.4 1.6-2 3.4-2 5.5 0 1.6.7 2.6 2 3V21"/></svg></a>
     <button class="icono" id="btn-buscar" type="button" aria-label="Buscar citas y fechas">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 20 20"/></svg></button>
     <button class="avatar" id="btn-cuenta" type="button" aria-label="Cuenta"></button>
@@ -632,6 +634,7 @@ async function boot() {
     VAPID = cfg.VAPID || "";
   } catch { return mostrar("#v-config"); }
   if (APPS.compra) { $("#btn-compra").href = APPS.compra; $("#btn-compra").hidden = false; }
+  if (APPS.recetas) { $("#btn-recetas").href = APPS.recetas; $("#btn-recetas").hidden = false; }
   if (!firebaseConfig?.apiKey || firebaseConfig.apiKey.startsWith("PEGA")) return mostrar("#v-config");
   PERSONAS = Object.entries(USUARIOS).slice(0, 2).map(([email, nombre], i) => ({ email, nombre, color: `var(--p${i + 1})` }));
 
