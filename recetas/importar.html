@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Importar desde Crouton</title>
+<meta name="theme-color" content="#F3F4EF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141A17" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F4EF; --sup:#FFFFFF; --tinta:#1F2B25; --suave:#515C56; --linea:#DCDFD6; --borde:#6E7A73;
+  --azafran:#E3A018; --azafran-t:#FBEFD2; --romero:#2A5540; --romero-t:#E1EBE4; --peligro:#A3201A; --peligro-t:#F7E4E2;
+  --titulo:"Bricolage Grotesque", ui-rounded, system-ui, sans-serif;
+  --texto:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --e05:.25rem; --e1:.5rem; --e2:1rem; --e3:1.5rem; --e4:2rem;
+  --r:.875rem; --toque:2.75rem; --fila:3.25rem;
+  --sa-t:env(safe-area-inset-top,0px); --sa-b:env(safe-area-inset-bottom,0px);
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#141A17; --sup:#1F2823; --tinta:#E8ECE6; --suave:#A9B3AD; --linea:#2C3631; --borde:#8A958E;
+  --azafran:#F0B43A; --azafran-t:#3A301A; --romero:#8CC3A5; --romero-t:#22332A; --peligro:#F2B8B5; --peligro-t:#3A2422;
+}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tinta);font:1rem/1.6 var(--texto);-webkit-text-size-adjust:100%}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--azafran);outline-offset:2px;border-radius:.25rem}
+[hidden]{display:none!important}
+a{color:var(--romero)}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.001ms!important}}
+main{max-width:44rem;margin:0 auto;padding:calc(var(--e3) + var(--sa-t)) var(--e2) calc(var(--e4) + var(--sa-b))}
+h1{font:800 clamp(1.75rem,7vw,2.5rem)/1.1 var(--titulo);letter-spacing:-.02em;margin:0 0 var(--e1)}
+h2{font:700 1.375rem/1.3 var(--titulo);margin:var(--e3) 0 var(--e1)}
+p{line-height:1.6}
+.guia{color:var(--suave)}
+.btn{border:0;background:var(--romero-t);color:var(--tinta);border-radius:.75rem;padding:0 var(--e2);min-height:var(--toque);display:inline-flex;align-items:center;justify-content:center;gap:var(--e1);font-weight:600;white-space:nowrap}
+.btn.pri{background:var(--romero);color:var(--bg)}
+.btn.aza{background:var(--azafran);color:#1F2B25}
+.btn:disabled{opacity:.5}
+.zona{background:var(--sup);border-radius:var(--r);padding:var(--e3);text-align:center;display:flex;flex-direction:column;gap:var(--e2);align-items:center}
+.zona.sobre{outline:3px dashed var(--azafran);outline-offset:-6px}
+.progreso{height:.5rem;background:var(--linea);border-radius:.25rem;overflow:hidden;margin:var(--e1) 0}
+.progreso i{display:block;height:100%;width:100%;background:var(--azafran);transform:scaleX(0);transform-origin:left;transition:transform .15s linear}
+.cifras{display:flex;gap:var(--e3);flex-wrap:wrap;margin:var(--e2) 0}
+.cifra b{display:block;font:800 2rem/1 var(--titulo);color:var(--romero)}
+.cifra span{color:var(--suave);font-size:.875rem}
+ul.aviso{list-style:none;margin:0;padding:0}
+ul.aviso li{padding:var(--e1) 0;min-height:var(--fila);display:flex;align-items:center;gap:var(--e1);line-height:1.6}
+ul.aviso li small{color:var(--suave)}
+.caja{background:var(--sup);border-radius:var(--r);padding:var(--e2) var(--e3)}
+.registro{background:var(--sup);border-radius:var(--r);padding:var(--e2);max-height:18rem;overflow:auto;font-size:.875rem;line-height:1.6}
+.registro div{padding:.125rem 0}
+.mal{color:var(--peligro)}
+.error{color:var(--peligro)}
+.pie{display:flex;gap:var(--e1);flex-wrap:wrap;margin-top:var(--e2)}
+code{background:var(--azafran-t);border-radius:.25rem;padding:0 .25rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>Importar desde Crouton</h1>
+
+  <div id="v-config" hidden><p class="error">Falta <code>config.js</code> en este repositorio.</p></div>
+
+  <div id="v-login" hidden>
+    <p>Entra con la misma cuenta que usas en la app de recetas.</p>
+    <button class="btn pri" id="login-google">Entrar con Google</button>
+    <p class="error" id="login-error" hidden></p>
+  </div>
+
+  <div id="v-listo" hidden>
+    <p class="guia">Exporta tus recetas desde Crouton (Ajustes, «Export all recipes») y suelta aquí el archivo <code>.zip</code>. Se leen en este mismo navegador: nada se envía a ningún sitio que no sea tu propio Firebase. Puedes repetir la importación las veces que quieras, porque las recetas que ya estén no se duplican.</p>
+    <div class="zona" id="zona">
+      <p style="margin:0"><b id="quien"></b></p>
+      <label class="btn aza">Elegir el archivo .zip<input type="file" accept=".zip,application/zip" id="archivo" hidden></label>
+      <p class="guia" style="margin:0;font-size:.875rem">O arrastra el archivo hasta aquí. Mejor desde un ordenador: con muchas fotos, el móvil tarda bastante.</p>
+    </div>
+    <p class="error" id="error-zip" hidden></p>
+  </div>
+
+  <div id="v-revision" hidden>
+    <h2>Esto es lo que trae el archivo</h2>
+    <div class="cifras" id="cifras"></div>
+    <div class="caja" id="avisos"></div>
+    <div class="pie">
+      <button class="btn pri" id="empezar">Importar a la app</button>
+      <button class="btn" id="otro">Elegir otro archivo</button>
+    </div>
+  </div>
+
+  <div id="v-trabajo" hidden>
+    <h2 id="trabajo-titulo">Importando…</h2>
+    <div class="progreso"><i id="barra"></i></div>
+    <p class="guia" id="paso" aria-live="polite"></p>
+    <div class="registro" id="registro"></div>
+    <div class="pie"><button class="btn" id="parar">Parar</button></div>
+  </div>
+
+  <div id="v-final" hidden>
+    <h2 id="final-titulo">Importación terminada</h2>
+    <div class="cifras" id="final-cifras"></div>
+    <div class="caja" id="final-avisos"></div>
+    <div class="pie">
+      <a class="btn pri" id="ir-app" href="./">Abrir las recetas</a>
+      <button class="btn" id="copiar">Copiar el informe</button>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, getDocs, setDoc, addDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ZIP-INICIO: lee un .zip usando solo lo que trae el navegador (sin librerías). */
+// Un ZIP termina con un directorio central que dice dónde está cada archivo.
+export async function leerZip(blob) {
+  const tam = blob.size;
+  const colaN = Math.min(tam, 66000);
+  const cola = new DataView(await blob.slice(tam - colaN).arrayBuffer());
+  let fin = -1;
+  for (let i = cola.byteLength - 22; i >= 0; i--) if (cola.getUint32(i, true) === 0x06054b50) { fin = i; break; }
+  if (fin < 0) throw new Error("no-es-zip");
+  let nEntradas = cola.getUint16(fin + 10, true);
+  let inicioCD = cola.getUint32(fin + 16, true);
+  let tamCD = cola.getUint32(fin + 12, true);
+  // ZIP64: cuando hay más de 65.535 archivos o pesa más de 4 GB
+  if (inicioCD === 0xffffffff || nEntradas === 0xffff) {
+    for (let i = fin - 20; i >= 0; i--) {
+      if (cola.getUint32(i, true) === 0x07064b50) {
+        const off = Number(cola.getBigUint64(i + 8, true));
+        const z64 = new DataView(await blob.slice(off, off + 56).arrayBuffer());
+        if (z64.getUint32(0, true) === 0x06064b50) {
+          nEntradas = Number(z64.getBigUint64(32, true));
+          tamCD = Number(z64.getBigUint64(40, true));
+          inicioCD = Number(z64.getBigUint64(48, true));
+        }
+        break;
+      }
+    }
+  }
+  const cd = new DataView(await blob.slice(inicioCD, inicioCD + tamCD).arrayBuffer());
+  const td = new TextDecoder("utf-8");
+  const entradas = [];
+  let p = 0;
+  for (let k = 0; k < nEntradas && p + 46 <= cd.byteLength; k++) {
+    if (cd.getUint32(p, true) !== 0x02014b50) break;
+    const metodo = cd.getUint16(p + 10, true);
+    const comprimido = cd.getUint32(p + 20, true);
+    const original = cd.getUint32(p + 24, true);
+    const nLen = cd.getUint16(p + 28, true), eLen = cd.getUint16(p + 30, true), cLen = cd.getUint16(p + 32, true);
+    let desplaz = cd.getUint32(p + 42, true);
+    const nombre = td.decode(new Uint8Array(cd.buffer, cd.byteOffset + p + 46, nLen));
+    if (desplaz === 0xffffffff) {       // el desplazamiento real está en el campo extra de ZIP64
+      let e = p + 46 + nLen;
+      const finE = e + eLen;
+      while (e + 4 <= finE) {
+        const id = cd.getUint16(e, true), len = cd.getUint16(e + 2, true);
+        if (id === 0x0001) {
+          let q = e + 4;
+          if (original === 0xffffffff) q += 8;
+          if (comprimido === 0xffffffff) q += 8;
+          desplaz = Number(cd.getBigUint64(q, true));
+          break;
+        }
+        e += 4 + len;
+      }
+    }
+    entradas.push({ nombre, metodo, comprimido, desplaz });
+    p += 46 + nLen + eLen + cLen;
+  }
+  return {
+    entradas: entradas.filter(e => !e.nombre.endsWith("/") && !e.nombre.includes("__MACOSX")),
+    async texto(e) {
+      // La cabecera local repite el nombre y el campo extra, con longitudes que pueden no coincidir.
+      const cab = new DataView(await blob.slice(e.desplaz, e.desplaz + 30).arrayBuffer());
+      if (cab.getUint32(0, true) !== 0x04034b50) throw new Error("zip-corrupto");
+      const ini = e.desplaz + 30 + cab.getUint16(26, true) + cab.getUint16(28, true);
+      const trozo = blob.slice(ini, ini + e.comprimido);
+      if (e.metodo === 0) return await trozo.text();
+      if (e.metodo !== 8) throw new Error("zip-metodo-" + e.metodo);
+      if (typeof DecompressionStream !== "function") throw new Error("sin-descompresor");
+      const flujo = trozo.stream().pipeThrough(new DecompressionStream("deflate-raw"));
+      return await new Response(flujo).text();
+    }
+  };
+}
+/* ZIP-FIN */
+
+/* CONV-INICIO: traduce una receta de Crouton (.crumb) al formato de esta app. Sin DOM: se prueba aparte. */
+
+// Cada tipo de cantidad de Crouton, con su forma en singular y en plural.
+const UNIDADES = {
+  ITEM: ["", ""],
+  GRAMS: ["g", "g"],
+  KGS: ["kg", "kg"],
+  MILLS: ["ml", "ml"],
+  LITRES: ["l", "l"],
+  CENTILITER: ["cl", "cl"],
+  OUNCE: ["oz", "oz"],
+  TABLESPOON: ["cucharada", "cucharadas"],
+  TEASPOON: ["cucharadita", "cucharaditas"],
+  CUP: ["taza", "tazas"],
+  PINCH: ["pizca", "pizcas"],
+  PACKET: ["paquete", "paquetes"],
+  BUNCH: ["manojo", "manojos"],
+  CAN: ["lata", "latas"],
+  BOTTLE: ["botella", "botellas"],
+  SLICE: ["rodaja", "rodajas"],
+  CLOVE: ["diente", "dientes"],
+  HANDFUL: ["puñado", "puñados"],
+  DASH: ["chorrito", "chorritos"],
+  QUART: ["cuarto de galón", "cuartos de galón"],
+  PINT: ["pinta", "pintas"],
+  FLUID_OUNCE: ["fl oz", "fl oz"],
+  POUND: ["lb", "lb"],
+  MILLIGRAMS: ["mg", "mg"]
+};
+
+// Si el nombre ya trae la unidad escrita ("1 kilo de contramuslos", "gr gambas"), no se repite.
+const RE_UNIDAD_EN_NOMBRE = /^(de\s+|del\s+)?(kilos?|kgs?|gramos?|grs?|gr|g|mgs?|litros?|ls?|mililitros?|mls?|cls?|dls?|onzas?|oz|libras?|lbs?|cucharadas?|cucharaditas?|cdas?|cdtas?|tazas?|vasos?|pizcas?|pellizcos?|dientes?|unidad(?:es)?|uds?|latas?|botes?|botellas?|sobres?|paquetes?|manojos?|ramas?|ramitas?|hojas?|rodajas?|lonchas?|filetes?|trozos?|puñados?|chorros?|chorritos?)(\s|$|\.)/i;
+
+// Fracciones bonitas para los decimales más habituales (0,5 -> ½).
+function numeroBonito(n) {
+  if (n == null || !isFinite(n)) return "";
+  const ent = Math.floor(n + 1e-9), f = n - ent;
+  for (const [v, c] of [[0, ""], [.25, "¼"], [1 / 3, "⅓"], [.5, "½"], [2 / 3, "⅔"], [.75, "¾"], [1, ""]]) {
+    if (Math.abs(f - v) < .02) {
+      const e = v === 1 ? ent + 1 : ent;
+      return c ? (e ? `${e} ${c}` : c) : String(e);
+    }
+  }
+  return (Math.round(n * 100) / 100).toString().replace(".", ",");
+}
+
+// Devuelve la línea de ingrediente tal y como la escribe esta app: "400 g de garbanzos".
+export function lineaIngrediente(ing) {
+  const nombre = String(ing?.ingredient?.name || "").trim().replace(/\s+/g, " ");
+  const q = ing?.quantity || {};
+  const cant = typeof q.amount === "number" && q.amount > 0 ? q.amount : null;
+  if (!nombre) return "";
+  if (cant == null) return nombre;                       // sin cantidad: tal cual ("Sal y pimienta")
+  const [sing, plur] = UNIDADES[q.quantityType] || ["", ""];
+  const num = numeroBonito(cant);
+  let unidad = cant === 1 || cant < 1 ? sing : plur;
+  if (unidad && RE_UNIDAD_EN_NOMBRE.test(nombre)) unidad = "";   // el nombre ya la trae
+  const cuerpo = nombre.replace(/^(de|del)\s+/i, "");
+  if (!unidad) return `${num} ${cuerpo}`;
+  return `${num} ${unidad} de ${cuerpo}`;
+}
+
+// Cantidades que casi seguro son un descuido en Crouton: su unidad por defecto sobre una especia.
+const SOSPECHOSAS = new Set(["CUP", "BUNCH", "OUNCE", "PINCH", "PACKET"]);
+export function esSospechosa(ing) {
+  const t = ing?.quantity?.quantityType;
+  if (!SOSPECHOSAS.has(t)) return false;
+  const n = String(ing?.ingredient?.name || "").toLowerCase();
+  return /sal|pimienta|pimentón|pimenton|azafrán|azafran|comino|orégano|oregano|canela|levadura|aceite|vinagre|perejil|colorante|especia/.test(n)
+    || (ing.quantity.amount || 0) > 4;
+}
+
+export function recetaDesdeCrumb(j, nombreArchivo) {
+  const ings = [...(j.ingredients || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const pasos = [...(j.steps || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const notas = [];
+  if (j.notes) notas.push(String(j.notes).trim());
+  if (j.neutritionalInfo) notas.push("Información nutricional: " + String(j.neutritionalInfo).trim());
+  let fuenteNombre = (j.sourceName || "").trim();
+  if (!fuenteNombre && j.webLink) { try { fuenteNombre = new URL(j.webLink).hostname.replace(/^www\./, ""); } catch { } }
+  const titulo = (j.name || String(nombreArchivo || "").replace(/\.crumb$/i, "") || "Sin nombre").trim();
+  return {
+    titulo,
+    raciones: Math.min(Math.max(Math.round(j.serves || 4), 1), 99),
+    prep: j.duration || null,
+    coccion: j.cookingDuration || null,
+    ingredientes: ings.map(lineaIngrediente).filter(Boolean),
+    pasos: pasos.map(p => {
+      const t = String(p.step || "").trim().replace(/\s*\n\s*/g, " ");
+      return p.isSection ? "# " + t.replace(/[:：]\s*$/, "") : t;
+    }).filter(t => t && t !== "#"),
+    etiquetas: [...new Set((j.tags || []).map(t => String(t.name || "").toLowerCase().trim()).filter(Boolean))],
+    notas: notas.join("\n"),
+    fuente: (j.webLink || "").trim(),
+    fuenteNombre,
+    croutonId: j.uuid || "",
+    // Las fotos se tratan aparte, porque hay que reducirlas antes de guardarlas.
+    _fotos: [...(j.images || []), ...(j.sourceImage ? [j.sourceImage] : [])],
+    _sospechosas: ings.filter(esSospechosa).map(lineaIngrediente)
+  };
+}
+/* CONV-FIN */
+
+/* =====================  interfaz  ===================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ver = sel => { for (const v of ["#v-config", "#v-login", "#v-listo", "#v-revision", "#v-trabajo", "#v-final"]) $(v).hidden = v !== sel; };
+const plural = (n, u, p) => `${n} ${n === 1 ? u : p}`;
+
+let auth, db, USUARIOS = {}, me = null, zip = null, recetas = [], yaEstan = new Set(), parar = false;
+const informe = [];
+const nombreDe = c => USUARIOS[(c || "").toLowerCase()] || (c || "").split("@")[0];
+
+(async function inicio() {
+  let cfg;
+  try { cfg = await import("./config.js"); if (!cfg.firebaseConfig) throw 0; }
+  catch { return ver("#v-config"); }
+  USUARIOS = Object.fromEntries(Object.entries(cfg.USUARIOS || {}).map(([k, v]) => [k.toLowerCase(), v]));
+  const app = initializeApp(cfg.firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  getRedirectResult(auth).catch(e => { $("#login-error").textContent = e.message; $("#login-error").hidden = false; });
+  onAuthStateChanged(auth, u => {
+    if (!u) { me = null; return ver("#v-login"); }
+    const correo = (u.email || "").toLowerCase();
+    if (Object.keys(USUARIOS).length && !USUARIOS[correo]) {
+      $("#login-error").textContent = `La cuenta ${correo} no tiene acceso.`;
+      $("#login-error").hidden = false;
+      return signOut(auth);
+    }
+    me = correo;
+    $("#quien").textContent = `Importarás en la cuenta de ${nombreDe(me)}`;
+    ver("#v-listo");
+  });
+})();
+
+$("#login-google").addEventListener("click", async () => {
+  const prov = new GoogleAuthProvider();
+  try { await signInWithPopup(auth, prov); }
+  catch (e) {
+    if (["auth/popup-blocked", "auth/operation-not-supported-in-this-environment"].includes(e.code)) signInWithRedirect(auth, prov);
+    else if (e.code !== "auth/popup-closed-by-user") { $("#login-error").textContent = e.message; $("#login-error").hidden = false; }
+  }
+});
+
+// ---------- elegir el archivo ----------
+const zona = $("#zona");
+["dragenter", "dragover"].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.add("sobre"); }));
+["dragleave", "drop"].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.remove("sobre"); }));
+zona.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) abrir(f); });
+$("#archivo").addEventListener("change", e => { const f = e.target.files[0]; e.target.value = ""; if (f) abrir(f); });
+$("#otro").addEventListener("click", () => ver("#v-listo"));
+
+async function abrir(file) {
+  const err = $("#error-zip"); err.hidden = true;
+  try {
+    zip = await leerZip(file);
+    const crumbs = zip.entradas.filter(e => /\.crumb$/i.test(e.nombre));
+    if (!crumbs.length) throw new Error("sin-recetas");
+    recetas = [];
+    for (const e of crumbs) {
+      try {
+        const j = JSON.parse(await zip.texto(e));
+        recetas.push(recetaDesdeCrumb(j, e.nombre));
+      } catch (x) { recetas.push({ titulo: e.nombre.replace(/\.crumb$/i, ""), _error: x.message }); }
+    }
+    yaEstan = new Set();
+    try {
+      const s = await getDocs(collection(db, "recetas"));
+      s.forEach(d => { const c = d.data().croutonId; if (c) yaEstan.add(c); });
+    } catch { }
+    revisar();
+  } catch (e) {
+    err.textContent = {
+      "no-es-zip": "Ese archivo no parece un .zip. Exporta de nuevo desde Crouton.",
+      "sin-recetas": "El .zip no contiene recetas de Crouton (archivos .crumb).",
+      "sin-descompresor": "Este navegador no sabe abrir el .zip. Prueba desde un ordenador con Chrome, Edge o Safari actualizado."
+    }[e.message] || ("No se ha podido abrir el archivo: " + e.message);
+    err.hidden = false;
+  }
+}
+
+function revisar() {
+  const nuevas = recetas.filter(r => !r._error && !yaEstan.has(r.croutonId));
+  const repes = recetas.filter(r => !r._error && yaEstan.has(r.croutonId));
+  const rotas = recetas.filter(r => r._error);
+  const sinPasos = nuevas.filter(r => !r.pasos.length);
+  const sinIngs = nuevas.filter(r => !r.ingredientes.length);
+  const conFoto = nuevas.filter(r => r._fotos.length);
+  const sospechosas = nuevas.flatMap(r => r._sospechosas.map(s => `${r.titulo}: ${s}`));
+  const cifra = (n, t) => `<div class="cifra"><b>${n}</b><span>${t}</span></div>`;
+  $("#cifras").innerHTML = cifra(nuevas.length, "recetas por importar")
+    + (repes.length ? cifra(repes.length, "ya importadas, se saltan") : "")
+    + cifra(conFoto.length, "con foto")
+    + (rotas.length ? cifra(rotas.length, "ilegibles") : "");
+  const li = (txt, det) => `<li><span>${txt}${det ? ` <small>${det}</small>` : ""}</span></li>`;
+  $("#avisos").innerHTML = "<ul class='aviso'>"
+    + li("Se conservan nombre, raciones, tiempos, ingredientes con sus cantidades, pasos, apartados, etiquetas, notas y el enlace de origen.")
+    + li("Las fotos se reducen antes de guardarse", "una de 1200 px para la receta y otra de 420 px para la lista.")
+    + (sinPasos.length ? li(`<span class="mal">${plural(sinPasos.length, "receta llega", "recetas llegan")} sin pasos</span>`,
+        "en Crouton tampoco los tiene. " + sinPasos.slice(0, 4).map(r => r.titulo).join("; ") + (sinPasos.length > 4 ? "…" : "")) : "")
+    + (sinIngs.length ? li(`<span class="mal">${plural(sinIngs.length, "receta llega", "recetas llegan")} sin ingredientes</span>`,
+        sinIngs.slice(0, 4).map(r => r.titulo).join("; ") + (sinIngs.length > 4 ? "…" : "")) : "")
+    + (sospechosas.length ? li(`${plural(sospechosas.length, "cantidad parece", "cantidades parecen")} un descuido de Crouton`,
+        "por ejemplo «" + sospechosas[0].split(": ")[1] + "». Se copian tal cual; al final tendrás la lista para corregirlas.") : "")
+    + "</ul>";
+  $("#empezar").disabled = !nuevas.length;
+  $("#empezar").textContent = nuevas.length ? `Importar ${plural(nuevas.length, "receta", "recetas")}` : "No hay nada nuevo que importar";
+  ver("#v-revision");
+}
+
+// ---------- reducir una foto ----------
+function aBlob(b64) {
+  const bin = atob(b64.replace(/\s/g, ""));
+  const u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return new Blob([u], { type: "image/jpeg" });
+}
+async function comprimir(blob, lado, calidad) {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = url; });
+    const k = Math.min(1, lado / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", calidad);
+  } finally { URL.revokeObjectURL(url); }
+}
+
+// ---------- importar ----------
+$("#parar").addEventListener("click", () => { parar = true; $("#parar").disabled = true; $("#paso").textContent = "Parando al terminar la receta en curso…"; });
+
+$("#empezar").addEventListener("click", async () => {
+  const cola = recetas.filter(r => !r._error && !yaEstan.has(r.croutonId));
+  parar = false; informe.length = 0;
+  $("#registro").innerHTML = ""; $("#parar").disabled = false;
+  ver("#v-trabajo");
+  let hechas = 0, conFoto = 0, sinFoto = 0, fallos = 0;
+  const anota = (txt, mal) => {
+    informe.push(txt);
+    const d = document.createElement("div");
+    if (mal) d.className = "mal";
+    d.textContent = txt;
+    $("#registro").prepend(d);
+  };
+  for (const [i, r] of cola.entries()) {
+    if (parar) break;
+    $("#paso").textContent = `${i + 1} de ${cola.length}: ${r.titulo}`;
+    $("#barra").style.transform = `scaleX(${((i) / cola.length).toFixed(3)})`;
+    const { _fotos, _sospechosas, ...datos } = r;
+    try {
+      const ref = await addDoc(collection(db, "recetas"), {
+        ...datos, favorita: false, vecesCocinada: 0, tieneFoto: false, tieneMini: false,
+        creadoEn: serverTimestamp(), creadoPor: me, creadoPorNombre: nombreDe(me),
+        editadoEn: serverTimestamp(), editadoPor: me
+      });
+      let foto = null, mini = null;
+      for (const b64 of _fotos) {
+        try {
+          const blob = aBlob(b64);
+          foto = await comprimir(blob, 1200, .72);
+          mini = await comprimir(blob, 420, .68);
+          break;
+        } catch { }
+      }
+      if (foto && mini) {
+        await setDoc(doc(db, "fotos", ref.id), { data: foto });
+        await setDoc(doc(db, "miniaturas", ref.id), { data: mini });
+        await setDoc(ref, { tieneFoto: true, tieneMini: true }, { merge: true });
+        conFoto++;
+      } else { if (_fotos.length) anota(`Sin foto: ${r.titulo} (no se ha podido leer la imagen)`, true); sinFoto++; }
+      yaEstan.add(r.croutonId);
+      hechas++;
+      anota(`${r.titulo} — ${plural(r.ingredientes.length, "ingrediente", "ingredientes")}, ${plural(r.pasos.length, "paso", "pasos")}${foto ? ", con foto" : ""}`);
+    } catch (e) {
+      fallos++;
+      anota(`ERROR en ${r.titulo}: ${e.code === "permission-denied" ? "sin permiso; revisa las reglas de Firestore" : e.message}`, true);
+      if (e.code === "permission-denied") break;
+    }
+  }
+  $("#barra").style.transform = "scaleX(1)";
+  const cifra = (n, t) => `<div class="cifra"><b>${n}</b><span>${t}</span></div>`;
+  $("#final-titulo").textContent = parar ? "Importación parada" : fallos ? "Importación terminada con fallos" : "Importación terminada";
+  $("#final-cifras").innerHTML = cifra(hechas, "recetas importadas") + cifra(conFoto, "con foto")
+    + (sinFoto ? cifra(sinFoto, "sin foto") : "") + (fallos ? cifra(fallos, "con fallos") : "");
+  const sospechosas = cola.slice(0, hechas).flatMap(r => r._sospechosas.map(s => `${r.titulo}: ${s}`));
+  const sinPasos = cola.slice(0, hechas).filter(r => !r.pasos.length);
+  $("#final-avisos").innerHTML = "<ul class='aviso'>"
+    + (sinPasos.length ? `<li><span>Rellena los pasos de ${sinPasos.length === 1 ? "esta receta" : `estas ${sinPasos.length} recetas`} <small>${esc(sinPasos.map(r => r.titulo).join("; "))}</small></span></li>` : "")
+    + (sospechosas.length ? `<li><span>Revisa estas cantidades, que en Crouton parecen un descuido <small>${esc(sospechosas.join(" · "))}</small></span></li>` : "")
+    + `<li><span>Puedes volver a importar el mismo .zip cuando quieras: las recetas ya traídas se saltan solas.</span></li>`
+    + "</ul>";
+  informe.unshift(`Importación del ${new Date().toLocaleString("es-ES")}: ${hechas} recetas, ${conFoto} con foto, ${fallos} fallos.`);
+  if (sinPasos.length) informe.push("Sin pasos: " + sinPasos.map(r => r.titulo).join("; "));
+  if (sospechosas.length) informe.push("Cantidades a revisar:\n" + sospechosas.join("\n"));
+  ver("#v-final");
+});
+
+$("#copiar").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(informe.join("\n")); $("#copiar").textContent = "Informe copiado"; }
+  catch { $("#copiar").textContent = "No se ha podido copiar"; }
+});
+</script>
+</body>
+</html>
