@@ -1,0 +1,9 @@
+{
+  "name": "avisos-calendario",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "ical-expander": "^3.2.0"
+  }
+}
