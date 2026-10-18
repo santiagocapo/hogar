@@ -258,6 +258,9 @@ textarea{resize:vertical}
 .plato-fila .t{flex:1;font-weight:600}
 .enlace{border:0;background:none;color:var(--p1);font-weight:600;padding:.3rem .5rem;min-height:var(--tap);border-radius:.5rem}
 .enlace.peligro{color:var(--red)}
+a.enlace{display:inline-flex;align-items:center;text-decoration:none;font-size:1rem}
+.platos-lista li{display:flex;align-items:center;gap:.25rem}
+.platos-lista li .ent{flex:1;min-width:0}
 .ingredientes{border:0;padding:0;margin:0}
 .ingredientes legend{font-size:.85rem;color:var(--muted);padding:0;margin-bottom:.3rem}
 .ing{display:grid;grid-template-columns:1fr 8.5rem var(--tap);gap:var(--e1);align-items:center;margin-bottom:var(--e1)}
@@ -422,6 +425,7 @@ textarea{resize:vertical}
   <form id="f-plato" class="hoja" novalidate hidden>
     <div class="hoja-cab"><h2 id="fp-titulo">Nuevo plato</h2><button type="button" class="x" data-cerrar aria-label="Volver">×</button></div>
     <label class="campo"><span>Nombre</span><input name="nombre" maxlength="80" autocomplete="off"></label>
+    <p><a class="enlace" id="fp-receta" hidden>Ver receta</a></p>
     <fieldset class="ingredientes">
       <legend>Ingredientes que a veces hay que comprar</legend>
       <div id="fp-ings"></div>
@@ -918,6 +922,9 @@ function htmlMenuDia(k, siempre) {
     `<button type="button" data-slot="${s}" data-f="${k}"><span class="l">${t}:</span> ${m[s]?.length ? esc(m[s].map(nombrePlato).join(", ")) : `<span class="sin">sin decidir</span>`}</button>`).join("")}</div>`;
 }
 const nombrePlato = e => platos.find(p => p.id === e.id)?.nombre || e.nombre;
+// Enlace a la receta en la app de recetas, solo si el plato tiene receta y existe esa app.
+const urlReceta = p => (p?.recetaId && APPS.recetas) ? `${APPS.recetas}#r=${encodeURIComponent(p.recetaId)}` : "";
+const verReceta = p => { const u = urlReceta(p); return u ? `<a class="enlace" href="${esc(u)}" aria-label="Ver la receta de ${esc(p.nombre)}">Ver receta</a>` : ""; };
 const rangoSemana = (ini, fin) => ini.getMonth() === fin.getMonth()
   ? `${ini.getDate()} – ${fin.getDate()} de ${F_MES.format(fin)}`
   : `${ini.getDate()} ${F_MESC.format(ini)} – ${fin.getDate()} ${F_MESC.format(fin)}`;
@@ -942,7 +949,7 @@ function vMenu() {
   const l = [...platos].sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   h += l.length
     ? `<ul class="lista platos-lista">${l.map(p => `<li><button type="button" class="ent" data-plato="${esc(p.id)}"><span class="t">${esc(p.nombre)}</span>
-        <span class="meta">${p.ingredientes?.length ? `${p.ingredientes.length} ${p.ingredientes.length === 1 ? "ingrediente" : "ingredientes"}` : "Sin ingredientes"}</span></button></li>`).join("")}</ul>`
+        <span class="meta">${p.ingredientes?.length ? `${p.ingredientes.length} ${p.ingredientes.length === 1 ? "ingrediente" : "ingredientes"}` : "Sin ingredientes"}</span></button>${verReceta(p)}</li>`).join("")}</ul>`
     : `<p class="intro">Aún no hay platos. Se guardan solos al ponerlos en el menú, con sus ingredientes para no tener que repetirlos.</p>`;
   return h + `<button type="button" class="btn mas" data-nuevo-plato style="margin-top:1rem">Nuevo plato</button>`;
 }
@@ -1414,6 +1421,7 @@ function pintarSlot() {
   $("#hs-titulo").textContent = `${SLOTS[slot]}, ${F_DIA.format(parse(fecha))}`;
   $("#hs-actuales").innerHTML = lista.length
     ? lista.map((e, i) => `<li class="plato-fila"><span class="t">${esc(nombrePlato(e))}</span>
+        ${verReceta(platos.find(p => p.id === e.id))}
         ${platos.some(p => p.id === e.id) ? `<button type="button" class="enlace" data-editar-plato="${esc(e.id)}">Editar</button>` : ""}
         <button type="button" class="enlace peligro" data-quitar="${i}">Quitar</button></li>`).join("")
     : `<li class="vacio">Todavía no hay nada.</li>`;
@@ -1480,6 +1488,7 @@ function abrirPlato(p, nombreInicial) {
   $("#fp-ings").innerHTML = "";
   (p?.ingredientes?.length ? p.ingredientes : [null]).forEach(filaIng);
   $("#fp-borrar").hidden = !p;
+  const ur = urlReceta(p); $("#fp-receta").hidden = !ur; if (ur) $("#fp-receta").href = ur;
   $("#dl-productos").innerHTML = items.map(i => `<option value="${esc(i.name)}"></option>`).join("");
   abrirHoja(fp);
 }
