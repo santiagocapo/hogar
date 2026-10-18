@@ -1109,7 +1109,9 @@ $("#hmas-lista").addEventListener("click", e => {
 });
 async function borrarReceta(r) {
   if (!confirm(`¿Borrar «${r.titulo}»? No se puede deshacer.`)) return;
-  await deleteDoc(doc(db, "recetas", r.id)).catch(falloEn("recetas"));
+  // Si Firestore rechaza el borrado, se enseña el error y no se dice que se ha borrado.
+  try { await deleteDoc(doc(db, "recetas", r.id)); }
+  catch (e) { return fallo(e, "recetas"); }
   if (r.tieneFoto) deleteDoc(doc(db, "fotos", r.id)).catch(() => { });
   if (r.tieneMini) deleteDoc(doc(db, "miniaturas", r.id)).catch(() => { });
   minis.delete(r.id); fotos.delete(r.id);
