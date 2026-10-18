@@ -298,6 +298,11 @@ label.campo{display:flex;flex-direction:column;gap:var(--e05);font-size:.875rem;
     <datalist id="dl-etiquetas"></datalist>
     <label class="campo">Notas<textarea name="notas" rows="3"></textarea></label>
     <label class="campo">Enlace de origen<input name="fuente" type="url" inputmode="url" placeholder="https://"></label>
+    <fieldset class="fila-campos" style="border:0;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+      <label class="campo">Veces cocinada<input name="veces" type="number" min="0" max="999" inputmode="numeric"></label>
+      <label class="campo">Última vez<input name="ultima" type="date"></label>
+    </fieldset>
+    <p class="ayuda">Para las de siempre: apunta cuántas veces la has hecho (aunque sea aproximado) y cuándo fue la última. Con eso el calendario podrá sugerirte qué toca cocinar.</p>
     <p class="error" id="ed-error" hidden></p>
   </form>
 </main>
@@ -407,7 +412,7 @@ import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signI
   signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, onSnapshot,
   addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, deleteField, query, where, documentId,
-  serverTimestamp, arrayUnion, arrayRemove, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  serverTimestamp, arrayUnion, arrayRemove, increment, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* NUCLEO-INICIO: funciones puras (sin Firebase ni DOM), probadas aparte */
 const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -1147,6 +1152,8 @@ function abrirEditor(r) {
   fe.elements.etiquetas.value = (x.etiquetas || []).join(", ");
   fe.elements.notas.value = x.notas || "";
   fe.elements.fuente.value = x.fuente || "";
+  fe.elements.veces.value = x.vecesCocinada || "";
+  { const u = x.ultimaVez?.toDate?.(); fe.elements.ultima.value = u ? `${u.getFullYear()}-${String(u.getMonth() + 1).padStart(2, "0")}-${String(u.getDate()).padStart(2, "0")}` : ""; }
   $("#dl-etiquetas").innerHTML = [...new Set(recetas.flatMap(z => z.etiquetas || []))].map(e => `<option value="${esc(e)}">`).join("");
   const img = editando ? (fotos.get(editando.id) || minis.get(editando.id) || x.miniatura || x.fotoUrl) : (x.fotoImportada || x.fotoUrl);
   if (!editando && x.fotoImportada) fotoNueva = x.fotoImportada;
@@ -1173,8 +1180,12 @@ fe.addEventListener("submit", async e => {
     ingredientes: lineas(el.ingredientes.value), pasos: lineas(el.pasos.value),
     etiquetas: [...new Set(el.etiquetas.value.split(",").map(norm).filter(Boolean))],
     notas: el.notas.value.trim(), fuente: el.fuente.value.trim(),
-    editadoEn: serverTimestamp(), editadoPor: me
+    editadoEn: serverTimestamp(), editadoPor: me,
+    vecesCocinada: num(el.veces.value) ?? 0
   };
+  // La fecha solo se toca si se ha cambiado (para no pisar la que guarda el modo cocina).
+  const antes = editando?.ultimaVez?.toDate?.(), antesTxt = antes ? `${antes.getFullYear()}-${String(antes.getMonth() + 1).padStart(2, "0")}-${String(antes.getDate()).padStart(2, "0")}` : "";
+  if (el.ultima.value !== antesTxt) datos.ultimaVez = el.ultima.value ? Timestamp.fromDate(new Date(el.ultima.value + "T12:00:00")) : deleteField();
   if (datos.fuente && !editando?.fuenteNombre) { try { datos.fuenteNombre = new URL(datos.fuente).hostname.replace(/^www\./, ""); } catch { } }
   let miniNueva;
   if (fotoNueva !== undefined) {
@@ -1190,7 +1201,7 @@ fe.addEventListener("submit", async e => {
     if (id) await updateDoc(doc(db, "recetas", id), datos);
     else {
       const { miniatura, ...nuevo } = datos;
-      const ref = await addDoc(collection(db, "recetas"), { ...nuevo, favorita: false, vecesCocinada: 0, creadoEn: serverTimestamp(), creadoPor: me, creadoPorNombre: nombreDe(me) });
+      const ref = await addDoc(collection(db, "recetas"), { ...nuevo, favorita: false, creadoEn: serverTimestamp(), creadoPor: me, creadoPorNombre: nombreDe(me) });
       id = ref.id;
     }
     if (fotoNueva) {
